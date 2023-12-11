@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        :root {
+            --cell-size: 100px;
+            --mark-size: calc(var(--cell-size)*0.9)
+        }
+
+        body {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            height: 100vh;
+            background-color: black;
+            color: white;
+        }
+
+        #title {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+        }
+
+        .dark {
+            padding: 5px;
+            margin: 10px;
+            font-size: 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .board {
+            height: 100vh;
+            display: grid;
+            justify-content: center;
+            align-content: center;
+            grid-template-columns: repeat(3, auto);
+        }
+
+        .cell {
+            height: var(--cell-size);
+            width: var(--cell-size);
+            background-color: black;
+            border: 1px solid rgb(248, 244, 244);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell:nth-child(1),
+        .cell:nth-child(2),
+        .cell:nth-child(3) {
+            border-top: none;
+        }
+
+        .cell:nth-child(1),
+        .cell:nth-child(4),
+        .cell:nth-child(7) {
+            border-left: none;
+        }
+
+        .cell:nth-child(7),
+        .cell:nth-child(8),
+        .cell:nth-child(9) {
+            border-bottom: none;
+        }
+
+        .cell:nth-child(3),
+        .cell:nth-child(6),
+        .cell:nth-child(9) {
+            border-right: none;
+        }
+
+
+        .cell.x,
+        .cell.c {
+            cursor: not-allowed;
+        }
+        .cell.x::after,
+        .cell.x::before {
+            background-color: rgb(254, 5, 5);
+            border: 1.4px solid black;
+        }
+
+        .board.x .cell:not(.c):not(.x):hover::after,
+        .board.x .cell:not(.c):not(.x):hover::before {
+            background-color: rgba(163, 31, 31, 0.563);
+        }
+
+        .cell.x::after,
+        .cell.x::before,
+        .board.x .cell:not(.c):not(.x):hover::after,
+        .board.x .cell:not(.c):not(.x):hover::before {
+            content: "";
+            height: var(--mark-size);
+            width: calc(var(--mark-size)* 0.10);
+            position: absolute;
+        }
+
+        .board.x .cell:not(.c):not(.x):hover::after,
+        .cell.x::after {
+            transform: rotate(45deg);
+        }
+
+        .board.x .cell:not(.c):not(.x):hover::before,
+        .cell.x::before {
+            transform: rotate(-45deg);
+        }
+
+        /*-----------------  For Cirle*/
+        .cell.c::after {
+            background-color: #00FF00;
+            border: 1.4px solid black;
+
+        }
+
+        .board.c .cell:not(.x):not(.c):hover::after {
+            background-color: rgba(13, 212, 23, 0.563);
+        }
+
+        .board.c .cell:not(.x):not(.c):hover::after,
+        .cell.c::after {
+            content: "";
+            border-radius: 50%;
+        }
+
+        .board.c .cell:not(.x):not(.c):hover::after,
+        .cell.c::after {
+            width: calc(var(--mark-size)*0.7);
+            height: calc(var(--mark-size)*0.7);
+        }
+
+        /*----------*/
+        /*----------*/
+        .show-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            justify-content: center;
+            align-items: center;
+            color: wheat;
+            font-size: 3rem;
+            flex-direction: column;
+        }
+
+        .restartBtn {
+            padding: 10px;
+            margin: 10px;
+            border: 2px solid black;
+            border-radius: 5px;
+            font-size: 2.5rem;
+            cursor: pointer;
+        }
+
+        .message {
+            font-size: 4rem;
+        }
+
+        .show-message.show {
+            display: flex;
+
+        }
+        #note{
+            display: flex;
+            justify-content: center;
+            padding-top: 10px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav id="title">
+        <span>
+            <h1>Tic-Tac-Toe</h1>
+        </span>
+        <button class="dark" id="white-dark">Day</button>
+    </nav>
+    <div id="note">Note: It start with X and Next Whoever Win</div>
+    <div class="board" boardGame>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+    </div>
+    <div class="show-message">
+        <div class="message"></div>
+        <button class="restartBtn">Restart</button>
+    </div>
+    <div>
+        <audio id="xSound" src="/tic-tac-toe/sound/mouse.mp3"></audio>
+        <audio id="oSound" src="/tic-tac-toe/sound/decide.mp3"></audio>
+
+    </div>
+    <script>
+        const nightDay = document.querySelector('#white-dark')
+        const cells = document.querySelectorAll('.cell');
+        const xMarks = document.querySelectorAll('.cell.x');
+        const cMarks = document.querySelectorAll('.cell.c');
+        function dayBtn() {
+            document.querySelector('body').style.backgroundColor = 'antiquewhite'
+            document.querySelector('body').style.color = 'black'
+            nightDay.innerText = 'Night'
+        }
+        function nightBtn() {
+            document.querySelector('body').style.backgroundColor = 'black'
+            document.querySelector('body').style.color = 'white'
+            nightDay.innerText = 'Day'
+        }
+        function cellwhite() {
+            cells.forEach(cell => {
+                cell.style.backgroundColor = 'antiquewhite';
+                cell.style.borderColor = 'black'
+            })
+        }
+        function cellblack() {
+            cells.forEach(cell => {
+                cell.style.backgroundColor = 'black'
+                cell.style.borderColor = 'white'
+
+            })
+        }
+        nightDay.addEventListener('click', () => {
+
+            if (nightDay.innerText === 'Night') {
+                nightBtn(), cellblack()
+            } else {
+                dayBtn(), cellwhite()
+            }
+        })
+
+        // -------------------------------------------------------------------------------
+        const winning_numbers = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ]
+        const restartBtn = document.querySelector('.restartBtn')
+        const c = 'c'
+        const x = 'x'
+        const board = document.querySelector('.board')
+        const messageBox = document.querySelector('.show-message')
+        const message = document.querySelector('.message')
+        const xSound = document.getElementById('xSound');
+        const oSound = document.getElementById('oSound');
+
+        let C_Trun;
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', click, { once: true })
+        })
+
+        function click(e) {
+            const cell = e.target
+            const WhoseTurn = C_Trun ? c : x
+            marking(cell, WhoseTurn);
+            if (WhoseTurn === 'x') {
+                xSound.play();
+            } else {
+                oSound.play();
+            }
+            if (winner(WhoseTurn)) {
+                matchEnd(false, WhoseTurn)
+            } else if (draw()) {
+                matchEnd(true)
+            } else {
+                swaping();
+                hover();
+            }
+
+        }
+
+
+        // hover of o or x 
+        function hover(WhoseTurn) {
+            board.classList.remove(x);
+            board.classList.remove(c);
+            if (C_Trun) {
+                board.classList.add(c)
+            } else {
+                board.classList.add(x)
+            }
+        }
+
+        // swaping of O -- X, X -- O
+        function swaping() {
+            C_Trun = !C_Trun
+        }
+        // marking x or o 
+        function marking(cell, WhoseTurn) {
+            cell.classList.add(WhoseTurn)
+        }
+
+        // selecting who is winner 
+        function winner(WhoseTurn) {
+            return winning_numbers.some(combination => {
+                return combination.every(index => {
+                    return cells[index].classList.contains(WhoseTurn)
+                })
+            })
+
+        }
+        // what to show when match END 
+        function matchEnd(draw, WhoseTurn) {
+            if (draw) {
+                message.innerText = 'Oops!!, None of you win'
+            } else {
+                message.innerText = `Hurrey ${WhoseTurn === 'c' ? "O's" : "X's"} Winner`
+            }
+            messageBox.classList.add('show')
+        }
+
+        // how match will draw
+        function draw() {
+            return Array.from(cells).every(cell => {
+                return cell.classList.contains(x) || cell.classList.contains(c)
+            })
+        }
+
+        restartBtn.addEventListener('click', restartTheGame)
+        function restartTheGame() {
+            cells.forEach(cell => {
+                cell.classList.remove(c, x)
+                cell.removeEventListener('click', click)
+                cell.addEventListener('click', click, { once: true })
+            })
+            messageBox.classList.remove('show')
+        }
+
+    </script>
+</body>
+
+</html>
